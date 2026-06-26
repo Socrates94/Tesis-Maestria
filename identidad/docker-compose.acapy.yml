@@ -1,0 +1,31 @@
+version: '3'
+services:
+  acapy:
+    image: ghcr.io/hyperledger/aries-cloudagent-python:py3.9-0.12.1
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    command: >
+      start
+      --inbound-transport http 0.0.0.0 8000
+      --outbound-transport http
+      --endpoint http://localhost:8000
+      --admin 0.0.0.0 8001
+      --admin-insecure-mode
+      --label "Institucion-Emisora"
+      --genesis-url http://host.docker.internal:9000/genesis
+      --wallet-type askar
+      --wallet-name "institucion_wallet"
+      --wallet-key "secret-key"
+      --auto-provision
+      --webhook-url http://host.docker.internal:8080/webhooks
+      --log-level info
+      --public-invites
+      --auto-accept-invites
+      --auto-accept-requests
+      --auto-ping-connection
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./config:/home/indy/config
+      - ./schemas:/home/indy/schemas
