@@ -1,7 +1,7 @@
 version: '3'
 services:
   acapy:
-    image: ghcr.io/hyperledger/aries-cloudagent-python:py3.9-0.12.1
+    image: bcgovimages/aries-cloudagent:py3.12_1.2.0
     ports:
       - "8000:8000"
       - "8001:8001"
@@ -17,8 +17,9 @@ services:
       --wallet-type askar
       --wallet-name "institucion_wallet"
       --wallet-key "secret-key"
+      --seed 00000000000000000000000000000001
       --auto-provision
-      --webhook-url http://host.docker.internal:8080/webhooks
+      --webhook-url http://host.docker.internal:8082/webhooks
       --log-level info
       --public-invites
       --auto-accept-invites

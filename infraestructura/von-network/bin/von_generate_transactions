@@ -73,9 +73,9 @@ fi
 if [ ! -z "$ipAddresses" ]; then
     ipsArg="$ipAddresses"
 elif [ ! -z "$ipAddress" ]; then
-    ipsArg="$ipAddress","$ipAddress","$ipAddress","$ipAddress"
+    ipsArg="$ipAddress","$ipAddress","$ipAddress","$ipAddress","$ipAddress","$ipAddress","$ipAddress"
 elif [ ! -z "$DOCKERHOST" ]; then
-    ipsArg="$DOCKERHOST","$DOCKERHOST","$DOCKERHOST","$DOCKERHOST"
+    ipsArg="$DOCKERHOST","$DOCKERHOST","$DOCKERHOST","$DOCKERHOST","$DOCKERHOST","$DOCKERHOST","$DOCKERHOST"
 else
     echo "Error: no IP, IPS, or DOCKERHOST argument provided."
     exit 1
@@ -89,14 +89,14 @@ echo -e "genesisFilePath: ${genesisFilePath}"
 echo -e "------------------------------------------------------------------------------------------------"
 # Use supplied IP address
 echo -e generate_indy_pool_transactions \
-    --nodes 4 \
+    --nodes 7 \
     --clients 0 \
     $nodeArg \
     --ips "$ipsArg" \
     \\n
 
 generate_indy_pool_transactions \
-    --nodes 4 \
+    --nodes 7 \
     --clients 0 \
     $nodeArg \
     --ips "$ipsArg"

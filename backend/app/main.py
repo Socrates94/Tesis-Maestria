@@ -1,11 +1,22 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import webhooks, credentials
+from contextlib import asynccontextmanager
+from app.core.database import engine, Base
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Inicializar la base de datos al arrancar
+    async with engine.begin() as conn:
+        # En producción se usaría Alembic, aquí creamos las tablas directamente
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 app = FastAPI(
     title="Institución Emisora - API Controlador",
     description="Backend FastAPI para controlar el Agente ACA-Py institucional",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Configuración CORS
