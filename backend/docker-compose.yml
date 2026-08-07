@@ -22,6 +22,8 @@ services:
       - db
     environment:
       DATABASE_URL: "postgresql+asyncpg://tesis_user:tesis_password@db:5432/ssi_backend"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   pgdata:

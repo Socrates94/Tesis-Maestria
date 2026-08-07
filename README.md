@@ -7,51 +7,57 @@ Este repositorio contiene la implementación base para la tesis sobre **Identida
 El proyecto está compuesto por cuatro pilares tecnológicos:
 
 ### 1. `infraestructura/` (Hyperledger Indy)
-Es la capa más profunda, la **blockchain local** (DLT) donde vivirán los DIDs públicos de tu institución y los esquemas de credenciales. 
-- Utiliza **von-network** para levantar 4 nodos validadores en contenedores Docker de manera rápida.
-- Al correrla, podrás ver un "Ledger Browser" (Explorador web) en el puerto `9000` para auditar qué hay escrito en la blockchain.
+Es la capa más profunda, la **blockchain local** (DLT) donde viven los DIDs públicos de tu institución y los esquemas de credenciales. 
+- Utiliza **von-network** para levantar 4 nodos validadores en contenedores Docker.
+- Al correrla, puedes ver un "Ledger Browser" (Explorador web) en `http://localhost:9000` para auditar qué hay escrito en la blockchain y registrar semillas/DIDs.
 
 ### 2. `identidad/` (Aries Cloud Agent - ACA-Py)
 Es el "Agente" criptográfico. Actúa como el intermediario (Middleware) que hace todo el trabajo matemático pesado:
-- Emite las credenciales verificables (VCs).
-- Genera y procesa las llaves criptográficas.
-- Solicita y verifica las pruebas de conocimiento cero (ZKP).
-- Funciona 100% *off-chain* (fuera de la blockchain).
+- Emite las credenciales verificables (VCs) y solicita pruebas ZKP.
+- Funciona 100% *off-chain* (fuera de la blockchain) interactuando con las Wallets móviles de los usuarios.
 - Expone una API Administrativa visual (Swagger) en el puerto `8001`.
 
-### 3. `backend/` (FastAPI + Python)
-Es el "cerebro" o **Controlador Institucional**. Aquí viven las reglas de negocio de tu universidad o institución.
+### 3. `backend/` (FastAPI + PostgreSQL)
+Es el **Controlador Institucional**. Aquí viven las reglas de negocio de tu universidad o institución.
 - Construido en **FastAPI**.
-- No maneja criptografía directamente (para no arriesgar los datos), sino que le envía comandos al Agente ACA-Py para que lo haga por él.
-- Recibe las respuestas de ACA-Py a través de "Webhooks" (eventos en tiempo real).
+- Se comunica de forma segura con ACA-Py enviándole comandos REST.
+- Escucha de vuelta a ACA-Py mediante **Webhooks** y guarda el estado (Conexiones, Emisiones, Verificaciones ZKP) en una base de datos PostgreSQL.
+- Expone su propio Swagger en `http://localhost:8082/docs`.
 
-### 4. `cliente/` (React SPA)
+### 4. `cliente/` (React SPA - Pendiente)
 Es el **Panel Administrativo Visual**.
-- Construido con React y Vite.
-- Es la interfaz gráfica donde un operador de tu institución (ej. servicios escolares) se conectará para ver un dashboard, presionar el botón "Emitir Credencial" o ver si un estudiante aprobó una Verificación ZKP.
-- Se comunica únicamente con el `backend/`.
+- Será la interfaz gráfica donde un operador institucional se conectará para ver el dashboard y presionar los botones "Emitir Credencial" o "Verificar".
+- Se comunicará únicamente con el `backend/`.
 
 ---
 
-## Cómo empezar (Ruta de Aprendizaje Recomendada)
+## Orden de Ejecución (Cómo Levantar el Proyecto)
 
-Si tienes un año para desarrollar este proyecto, lo ideal es no intentar entender todo de golpe. Aquí tienes la ruta recomendada paso a paso:
+Debido a las dependencias de red, los microservicios deben levantarse en un orden específico:
 
-1. **Docker (La Base):** 
-   - Entiende cómo funciona `docker` y `docker compose`. Absolutamente todo este proyecto se ejecuta en contenedores, por lo que dominar cómo prender, apagar y ver los *logs* de un contenedor es tu habilidad número uno.
+1. **Levantar la Blockchain (Nodos Indy)**
+   ```bash
+   cd infraestructura/von-network
+   ./manage build
+   ./manage start
+   ```
+   *Espera a que los nodos estén activos en `http://localhost:9000`.*
 
-2. **Hyperledger Indy (La Blockchain):**
-   - Entra a `infraestructura/scripts/` y ejecuta `./start_indy_network.sh`.
-   - Abre tu navegador en `http://localhost:9000`. Entiende qué es un DID (Decentralized Identifier) y cómo funciona el Ledger Browser.
+2. **Registrar la Institución en el Ledger**
+   Abre una terminal y registra el DID oficial de la institución:
+   ```bash
+   curl -d '{"role":"ENDORSER","alias":"Institucion","did":"JDmZmbYJnRyz5mb5U9wCxK","seed":"00000000000000000000000000000002","verkey":"APN393PJb55Jyi94DtgkQPd9zxghPbFSPqheppei5Esf"}' -H "Content-Type: application/json" -X POST http://localhost:9000/register
+   ```
 
-3. **FastAPI y Python (El Cerebro):**
-   - Aprende a crear un "Hola Mundo" en FastAPI.
-   - Entiende qué es un endpoint (GET, POST) y qué son los *Routers*.
-   - Aprende qué es un Webhook (esencial para que ACA-Py le avise a FastAPI que algo sucedió).
+3. **Levantar el Agente Criptográfico (ACA-Py)**
+   ```bash
+   cd identidad
+   docker compose -f docker-compose.acapy.yml up -d
+   ```
 
-4. **El Agente ACA-Py (La Magia SSI):**
-   - Levanta el agente con `infraestructura/scripts/start_acapy.sh`.
-   - Entra a `http://localhost:8001` (La API Administrativa). Juega con el panel de Swagger para ver todas las capacidades que tiene (Connections, Credentials, Present Proof).
-   
-5. **React (La Interfaz):**
-   - Déjalo para el final. Una vez que tu backend pueda emitir una credencial exitosamente usando *Postman* o *cURL*, solo tendrás que conectar React mediante peticiones *Axios* (HTTP).
+4. **Levantar el Backend Institucional (FastAPI + DB)**
+   ```bash
+   cd backend
+   docker compose up --build -d
+   ```
+   *Accede a `http://localhost:8082/docs` para interactuar con el sistema.*

@@ -1,0 +1,60 @@
+name: Integracion Continua (CI)
+
+# Define cuándo se ejecutará este flujo de trabajo (workflow)
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+# Un workflow se compone de uno o más trabajos (jobs) que pueden correr en paralelo
+jobs:
+  
+  # Trabajo 1: Validar el Backend (Python / FastAPI)
+  build-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Clona el repositorio en la máquina virtual de GitHub
+    - name: Descargar el código (Checkout)
+      uses: actions/checkout@v3
+
+    # 2. Instala Python
+    - name: Configurar entorno Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+        
+    # 3. Instala las dependencias del backend
+    - name: Instalar dependencias del Backend
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    # 4. En un futuro, aquí podrías ejecutar pytest para correr pruebas unitarias
+    - name: Ejecutar pruebas (Futuro)
+      run: |
+        echo "Aquí se ejecutarán las pruebas unitarias del backend (ej. pytest tests/)"
+
+  # Trabajo 2: Validar el Cliente (React / Vite)
+  build-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Clona el repositorio
+    - name: Descargar el código (Checkout)
+      uses: actions/checkout@v3
+
+    # 2. Instala Node.js
+    - name: Configurar Node.js 18
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18"
+        
+    # 3. Instala los paquetes de npm y construye el proyecto para verificar que no haya errores de compilación
+    - name: Instalar y compilar el Front-End (Vite)
+      run: |
+        cd cliente
+        npm install
+        npm run build
