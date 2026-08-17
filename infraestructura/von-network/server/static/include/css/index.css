@@ -1,5 +1,6 @@
 body, input, select {
-	color: #222;
+	background-color: #121212;
+	color: #ffffff;
 	font-family: 'Open Sans', sans-serif;
 	font-size: 16px;
 	line-height: 1.45;
@@ -93,8 +94,9 @@ a.tool, input[type=submit].tool {
 }
 
 .tool-button, .tool-input {
-	background-color: #f0f3ff;
-	border: 1px solid #58a;
+	background-color: #2a2a2a;
+	color: #ffffff;
+	border: 1px solid #555;
 	border-radius: 3px;
 	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.15);
 	box-sizing: border-box;
@@ -116,7 +118,7 @@ select.tool-input {
   width: 100%;
 }
 .tool-label {
-  color: #666;
+  color: #ccc;
   display: block;
   font-size: 90%;
 }
@@ -135,9 +137,14 @@ a.tool .left, .tool-button .left {
 	margin-right: 0.4rem;
 }
 
-form input[type=text] {
+input, select {
 	min-width: 250px;
-	background-color: white;
+	background-color: #2a2a2a;
+	color: #ffffff;
+	border: 1px solid #555;
+}
+input[type=submit], input[type=checkbox], input[type=radio] {
+	min-width: auto;
 }
 
 small, .small {
@@ -173,8 +180,8 @@ h2 .fa {
 	margin: 0.5rem 0;
 }
 .panel-default {
-	background: #f0f3ff;
-	box-shadow: 0 4px 3px 3px rgba(0, 0, 0, 0.02);
+	background: #1e1e1e;
+	box-shadow: 0 4px 3px 3px rgba(0, 0, 0, 0.2);
 }
 .panel-default .panel-heading {
 	background: #036;
@@ -182,7 +189,7 @@ h2 .fa {
 	color: #fafaec;
 }
 .panel-default > .panel-body {
-	border: 1px solid #e0e6ee;
+	border: 1px solid #333;
 	border-radius: 0.5rem;
 	padding-top: 10px;
 }
@@ -203,17 +210,17 @@ h2 .fa {
 }
 
 .panel-side {
-	background-color: #f7f6f6;
-	border: 2px solid #f0ecec;
+	background-color: #1e1e1e;
+	border: 2px solid #333;
 	border-radius: 0.5rem;
-	box-shadow: 0 4px 3px 3px rgba(0, 0, 0, 0.02);
+	box-shadow: 0 4px 3px 3px rgba(0, 0, 0, 0.2);
 }
 .panel-side .panel-heading {
-	color: #585555;
+	color: #e0e0e0;
 }
 .panel-side .panel-heading::after {
-	background: #fdfdfd;
-	border-bottom: 1px solid #ebe6e6;
+	background: #333;
+	border-bottom: 1px solid #222;
 	border-radius: 3px;
 	content: ' ';
 	display: block;
@@ -252,9 +259,9 @@ h2 .fa {
 }
 
 .panel-node {
-	background: #fff;
-	border: 1px solid #ddd;
-	-box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08);
+	background: #1e1e1e;
+	border: 1px solid #333;
+	-box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 .node-status {
 	display: flex;
@@ -262,7 +269,7 @@ h2 .fa {
 	position: relative;
 }
 .node-status:not(.template) + .node-status {
-	border-top: 1px solid #ddd;
+	border-top: 1px solid #333;
 }
 .node-status-left {
 	flex: 0 1 25%;
@@ -308,7 +315,7 @@ h2 .fa {
 	margin: 0;
 }
 .props label {
-	color: #888;
+	color: #ccc;
 }
 
 .ledger-txns {
@@ -323,7 +330,8 @@ h2 .fa {
 }
 .nav-label {
   display: inline-block;
-  opacity: 0.7;
+  opacity: 0.9;
+  color: #ccc;
   font-weight: 600;
   font-size: 90%;
   min-width: 6em;
@@ -392,21 +400,21 @@ h2 .fa {
 }
 
 .ledger-data {
-  background-color: #fff;
-  border: 1px solid #9bd;
+  background-color: #1e1e1e;
+  border: 1px solid #444;
   border-spacing: 0;
   margin-top: 1em;
   width: 100%;
 }
 .ledger-row:not(:last-child) td {
-  border-bottom: 1px solid #9bd;
+  border-bottom: 1px solid #444;
 }
 .ledger-row td {
   padding: 0.8em 0.5em;
   vertical-align: top;
 }
 .ledger-row:nth-child(even) {
-  background: #e9f0fe;
+  background: #252525;
 }
 .ledger-index {
   width: 10%;
@@ -457,9 +465,9 @@ h2 .fa {
   text-indent: 0;
 }
 .ledger-entry-title {
-  background: #9bd;
+  background: #3a3a3a;
   border-radius: 4px;
-  color: #f0f3ff;
+  color: #ffffff;
   font-size: 75%;
   font-weight: bold;
   margin-bottom: 0.25em;

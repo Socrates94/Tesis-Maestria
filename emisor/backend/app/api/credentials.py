@@ -1,10 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import get_db
+from app.core.config import settings
+from app.schemas.credentials import EmisionRequest, EmisionResponse
+from app.models.connection import ConnectionRecord
 import httpx
+import logging
 
 router = APIRouter(prefix="/credenciales", tags=["Credenciales"])
 
-# URL de la API Admin de ACA-Py
-ACAPY_ADMIN_URL = "http://host.docker.internal:8001"
+# URL de la API Admin de ACA-Py desde configuracion
+ACAPY_ADMIN_URL = settings.ACAPY_ADMIN_URL
 
 @router.post("/invitacion")
 async def crear_invitacion():
@@ -36,13 +42,20 @@ async def crear_invitacion():
         except Exception as e:
             return {"error": str(e)}
 
+from pydantic import BaseModel
+
+class AlumnoData(BaseModel):
+    nombre_completo: str
+    matricula: str
+    facultad: str
+    estatus_inscripcion: str
+    nivel: str
+
 @router.post("/emitir")
-async def emitir_credencial(connection_id: str, schema_id: str, cred_def_id: str):
+async def emitir_credencial(connection_id: str, schema_id: str, cred_def_id: str, alumno: AlumnoData):
     """
-    Ejemplo de endpoint para emitir una credencial.
-    Llama a la API administrativa de ACA-Py.
+    Emite la credencial de acceso BUAP a una conexión activa.
     """
-    # En un escenario real, los atributos vendrían del request o base de datos.
     payload = {
         "connection_id": connection_id,
         "filter": {
@@ -54,8 +67,11 @@ async def emitir_credencial(connection_id: str, schema_id: str, cred_def_id: str
         "credential_preview": {
             "@type": "issue-credential/2.0/credential-preview",
             "attributes": [
-                {"name": "nombre", "value": "Juan Perez"},
-                {"name": "matricula", "value": "20230001"}
+                {"name": "nombre_completo", "value": alumno.nombre_completo},
+                {"name": "matricula", "value": alumno.matricula},
+                {"name": "facultad", "value": alumno.facultad},
+                {"name": "estatus_inscripcion", "value": alumno.estatus_inscripcion},
+                {"name": "nivel", "value": alumno.nivel}
             ]
         }
     }

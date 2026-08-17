@@ -2,10 +2,12 @@ from fastapi import APIRouter
 import httpx
 from pydantic import BaseModel
 from typing import List
+from app.core.config import settings
 
-router = APIRouter(prefix="/setup", tags=["Setup Institucional"])
+router = APIRouter(prefix="/setup", tags=["Configuración (SSI)"])
 
-ACAPY_ADMIN_URL = "http://host.docker.internal:8001"
+# Usamos la URL desde la configuración
+ACAPY_ADMIN_URL = settings.ACAPY_ADMIN_URL
 
 class SchemaRequest(BaseModel):
     schema_name: str
@@ -58,3 +60,39 @@ async def register_credential_definition(req: CredDefRequest):
             return response.json()
         except Exception as e:
             return {"error": str(e)}
+
+@router.post("/init-buap")
+async def initialize_buap_schema():
+    """
+    Registra automáticamente el esquema 'credencial-acceso-buap' y su definición de credencial.
+    (Flujo de inicialización de la tesis).
+    """
+    schema_payload = {
+        "schema_name": "credencial-acceso-buap",
+        "schema_version": "1.0",
+        "attributes": ["nombre_completo", "matricula", "facultad", "estatus_inscripcion", "nivel"]
+    }
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            # 1. Registrar Schema
+            resp_schema = await client.post(f"{ACAPY_ADMIN_URL}/schemas", json=schema_payload)
+            resp_schema.raise_for_status()
+            schema_id = resp_schema.json().get("schema_id")
+            
+            # 2. Registrar Credential Definition
+            cred_def_payload = {
+                "schema_id": schema_id,
+                "tag": "default",
+                "support_revocation": False
+            }
+            resp_cred_def = await client.post(f"{ACAPY_ADMIN_URL}/credential-definitions", json=cred_def_payload)
+            resp_cred_def.raise_for_status()
+            
+            return {
+                "message": "Inicialización exitosa",
+                "schema_id": schema_id,
+                "credential_definition_id": resp_cred_def.json().get("credential_definition_id")
+            }
+        except Exception as e:
+            return {"error": f"Error en inicialización: {str(e)}"}

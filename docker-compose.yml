@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # BROKER MQTT (IoT)
+  # ==========================================
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: ssi_mqtt_broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./iot_hardware/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - ssi-network
+
+  # ==========================================
+  # EMISOR (Universidad)
+  # ==========================================
+  postgres-db-emisor:
+    image: postgres:15-alpine
+    container_name: ssi_postgres_emisor
+    environment:
+      POSTGRES_USER: tesis_user
+      POSTGRES_PASSWORD: tesis_password
+      POSTGRES_DB: ssi_backend
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_emisor:/var/lib/postgresql/data
+    networks:
+      - ssi-network
+
+  fastapi-emisor:
+    build:
+      context: ./emisor/backend
+      dockerfile: Dockerfile.backend
+    container_name: ssi_fastapi_emisor
+    ports:
+      - "8082:8082"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://tesis_user:tesis_password@postgres-db-emisor:5432/ssi_backend
+      - ACAPY_ADMIN_URL=http://acapy-emisor:8001
+    depends_on:
+      - postgres-db-emisor
+    networks:
+      - ssi-network
+
+  acapy-emisor:
+    image: bcgovimages/aries-cloudagent:py3.12_1.2.0
+    container_name: ssi_acapy_emisor
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    command: >
+      start
+      --inbound-transport http 0.0.0.0 8000
+      --outbound-transport http
+      --endpoint http://localhost:8000
+      --admin 0.0.0.0 8001
+      --admin-insecure-mode
+      --label "Institucion-Emisora"
+      --genesis-url http://host.docker.internal:9000/genesis
+      --wallet-type askar
+      --wallet-name "institucion_wallet_2"
+      --wallet-key "secret-key"
+      --seed 00000000000000000000000000000002
+      --auto-provision
+      --webhook-url http://fastapi-emisor:8082/webhooks
+      --log-level info
+      --public-invites
+      --auto-accept-invites
+      --auto-accept-requests
+      --auto-ping-connection
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./emisor/identidad/config:/home/indy/config
+      - ./emisor/identidad/schemas:/home/indy/schemas
+    depends_on:
+      - fastapi-emisor
+    networks:
+      - ssi-network
+
+  # ==========================================
+  # VERIFICADOR (Borde / Torniquete)
+  # ==========================================
+  postgres-db-verificador:
+    image: postgres:15-alpine
+    container_name: ssi_postgres_verificador
+    environment:
+      POSTGRES_USER: tesis_user
+      POSTGRES_PASSWORD: tesis_password
+      POSTGRES_DB: ssi_verificador
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data_verificador:/var/lib/postgresql/data
+    networks:
+      - ssi-network
+
+  fastapi-verificador:
+    build:
+      context: ./verificador_borde/backend
+      dockerfile: Dockerfile.backend
+    container_name: ssi_fastapi_verificador
+    ports:
+      - "8083:8082"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://tesis_user:tesis_password@postgres-db-verificador:5432/ssi_verificador
+      - ACAPY_ADMIN_URL=http://acapy-verificador:8011
+      - MQTT_BROKER_URL=mqtt://mosquitto:1883
+    depends_on:
+      - postgres-db-verificador
+      - mosquitto
+    networks:
+      - ssi-network
+
+  acapy-verificador:
+    image: bcgovimages/aries-cloudagent:py3.12_1.2.0
+    container_name: ssi_acapy_verificador
+    ports:
+      - "8010:8000"
+      - "8011:8001"
+    command: >
+      start
+      --inbound-transport http 0.0.0.0 8000
+      --outbound-transport http
+      --endpoint http://localhost:8010
+      --admin 0.0.0.0 8001
+      --admin-insecure-mode
+      --label "Torniquete-Verificador"
+      --genesis-url http://host.docker.internal:9000/genesis
+      --wallet-type askar
+      --wallet-name "verificador_wallet_1"
+      --wallet-key "secret-key"
+      --auto-provision
+      --webhook-url http://fastapi-verificador:8082/webhooks
+      --log-level info
+      --auto-accept-invites
+      --auto-accept-requests
+      --auto-ping-connection
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./verificador_borde/identidad/config:/home/indy/config
+    depends_on:
+      - fastapi-verificador
+    networks:
+      - ssi-network
+
+  react-frontend:
+    build:
+      context: ./cliente
+      dockerfile: Dockerfile.frontend
+    container_name: ssi_react
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8082
+    networks:
+      - ssi-network
+
+networks:
+  ssi-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

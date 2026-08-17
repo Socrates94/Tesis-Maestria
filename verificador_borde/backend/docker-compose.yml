@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: tesis_user
+      POSTGRES_PASSWORD: tesis_password
+      POSTGRES_DB: ssi_backend
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8082:8082"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://tesis_user:tesis_password@db:5432/ssi_backend"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  pgdata:

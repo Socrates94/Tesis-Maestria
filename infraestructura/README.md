@@ -6,47 +6,41 @@ Este directorio contiene la infraestructura descentralizada base de la tesis. Aq
 
 ```text
 codigo/infraestructura/
-└── von-network/             # Red Indy "en una caja" mantenida por el Gob. de BC.
-    ├── manage               # Script principal de orquestación de Docker Compose para la red.
-    ├── docker-compose.yml   # Define los nodos de la blockchain, webserver y bases de datos RocksDB.
-    └── ...                  # Archivos internos del repositorio von-network.
+├── von-network/             # Red Indy "en una caja" mantenida por el Gob. de BC.
+│   ├── manage               # Script de orquestación de Docker Compose para la red.
+│   └── docker-compose.yml   # Nodos validadores de la blockchain y webserver.
+├── indy-pool/               # Configuraciones adicionales del pool de Indy.
+└── scripts/                 # Scripts bash auxiliares para manejar la infraestructura.
+    ├── start_indy_network.sh
+    ├── stop_indy_network.sh
+    ├── start_acapy.sh
+    └── stop_acapy.sh
 ```
 
 ## Sobre `von-network`
 
-Para simular una red Hyperledger Indy en la computadora local de forma rápida, utilizamos **VON (Verifiable Organizations Network)**. Es un entorno Docker portátil creado y mantenido originalmente por el Gobierno de Columbia Británica (Canadá) como un bien público para los desarrolladores de Hyperledger Aries. 
+Para simular una red Hyperledger Indy en la computadora local de forma rápida, utilizamos **VON (Verifiable Organizations Network)**. Es un entorno Docker portátil que levanta **4 nodos validadores** de Indy y un explorador web donde se pueden visualizar todas las transacciones de la red.
 
-*   **Enlace Oficial:** [https://github.com/bcgov/von-network](https://github.com/bcgov/von-network)
+## Scripts de Administración (`/scripts`)
 
-Al ejecutar VON, se levantan **4 nodos validadores** de Indy y un explorador web donde se pueden visualizar todas las transacciones de la red.
+Para facilitar el levantamiento de los componentes principales del ecosistema SSI sin tener que escribir los largos comandos de Docker o recordar parámetros complejos, se proveen 4 scripts ejecutables en la carpeta `scripts/`.
 
-## Instrucciones de Uso
+### 1. `start_indy_network.sh`
+Este script se encarga de iniciar los 4 nodos validadores de la blockchain utilizando el entorno de `von-network`. Es el primer componente que **siempre** debe levantarse, ya que el resto de microservicios dependen de él.
+*   **Comando interno principal:** Llama a `./manage start` dentro de `von-network`.
+*   **Servicios expuestos:** Ledger Browser en `http://localhost:9000`.
 
-Para levantar la blockchain localmente:
+### 2. `stop_indy_network.sh`
+Detiene los contenedores de la blockchain local de Indy sin borrar los datos del ledger (DIDs, Esquemas, etc).
 
-1. Ingresa a la carpeta de von-network:
-   ```bash
-   cd von-network
-   ```
+### 3. `start_acapy.sh`
+Levanta el agente criptográfico Aries Cloud Agent Python (ACA-Py). Para funcionar, requiere que la red Indy ya esté arriba, ya que el script le pasará el "Genesis file" de la blockchain.
+*   **Puertos por defecto:** 8000 (HTTP de comunicación) y 8001 (Swagger / API Admin).
 
-2. (Solo la primera vez) Construye las imágenes Docker:
-   ```bash
-   ./manage build
-   ```
+### 4. `stop_acapy.sh`
+Detiene el proceso del agente criptográfico de manera segura.
 
-3. Levanta la red:
-   ```bash
-   ./manage start
-   ```
+## Modo Orquestado (Recomendación)
 
-4. Abre tu navegador web en **http://localhost:9000** para ver el "Ledger Browser". Desde ahí podrás auditar el estado de los nodos y registrar manualmente nuevos DIDs autorizados (Endorsers).
-
-Para detener la red sin borrar los datos:
-```bash
-./manage stop
-```
-
-Para borrar la red por completo (¡Atención: Se perderán todos los DIDs y Schemas!):
-```bash
-./manage down
-```
+> [!TIP]
+> Aunque los scripts de esta carpeta funcionan perfectamente de manera independiente, se recomienda utilizar el archivo maestro `docker-compose.yml` ubicado en la raíz (`/codigo`) para levantar todo el proyecto (Base de datos, Backend, Frontend, y ACA-Py) simultáneamente con un solo comando.

@@ -1,63 +1,63 @@
-# Arquitectura Descentralizada de Prevención de Fuga de Datos (SSI)
+# Arquitectura Descentralizada (SSI + IoT + NFC)
 
-Este repositorio contiene la implementación base para la tesis sobre **Identidad Auto-soberana (SSI) y Pruebas Criptográficas (ZKP)** para la prevención de fuga de datos. La arquitectura está dividida en microservicios, cumpliendo con los estándares internacionales del W3C (DIDs y Credenciales Verificables).
+Este repositorio contiene la implementación para la tesis sobre **Identidad Auto-soberana (SSI), Pruebas Criptográficas (ZKP) y Hardware de Borde (IoT)** para el control de acceso físico universitario. La arquitectura está dividida en microservicios distribuidos.
 
 ## Estructura del Proyecto
 
-El proyecto está compuesto por cuatro pilares tecnológicos:
+El proyecto está compuesto por cinco pilares tecnológicos:
 
 ### 1. `infraestructura/` (Hyperledger Indy)
-Es la capa más profunda, la **blockchain local** (DLT) donde viven los DIDs públicos de tu institución y los esquemas de credenciales. 
-- Utiliza **von-network** para levantar 4 nodos validadores en contenedores Docker.
-- Al correrla, puedes ver un "Ledger Browser" (Explorador web) en `http://localhost:9000` para auditar qué hay escrito en la blockchain y registrar semillas/DIDs.
+La **blockchain local** (DLT) donde viven los DIDs públicos y esquemas de credenciales.
+- Utiliza **von-network** encapsulado.
+- Explorador web (Ledger Browser) en `http://localhost:9000`.
 
-### 2. `identidad/` (Aries Cloud Agent - ACA-Py)
-Es el "Agente" criptográfico. Actúa como el intermediario (Middleware) que hace todo el trabajo matemático pesado:
-- Emite las credenciales verificables (VCs) y solicita pruebas ZKP.
-- Funciona 100% *off-chain* (fuera de la blockchain) interactuando con las Wallets móviles de los usuarios.
-- Expone una API Administrativa visual (Swagger) en el puerto `8001`.
+### 2. `emisor/` (Universidad: FastAPI + ACA-Py)
+El nodo central de la institución emisora.
+- **Backend**: FastAPI (puerto 8082). Controla las reglas de negocio, registra el Schema en la blockchain y solicita invitaciones de conexión (OOB).
+- **Identidad**: ACA-Py (puerto 8000/8001). Actúa como *Endorser* para emitir credenciales hacia la billetera del alumno.
 
-### 3. `backend/` (FastAPI + PostgreSQL)
-Es el **Controlador Institucional**. Aquí viven las reglas de negocio de tu universidad o institución.
-- Construido en **FastAPI**.
-- Se comunica de forma segura con ACA-Py enviándole comandos REST.
-- Escucha de vuelta a ACA-Py mediante **Webhooks** y guarda el estado (Conexiones, Emisiones, Verificaciones ZKP) en una base de datos PostgreSQL.
-- Expone su propio Swagger en `http://localhost:8082/docs`.
+### 3. `verificador_borde/` (Torniquete: FastAPI + ACA-Py)
+El nodo de borde desplegado físicamente en las entradas de la universidad.
+- **Backend**: FastAPI (puerto 8083). Se conecta al broker MQTT, solicita pruebas de conocimiento cero (Presentation Requests) verificando que el alumno esté "Activo", y autoriza la apertura.
+- **Identidad**: ACA-Py (puerto 8010/8011). Actúa como *Verifier*.
 
-### 4. `cliente/` (React SPA - Pendiente)
-Es el **Panel Administrativo Visual**.
-- Será la interfaz gráfica donde un operador institucional se conectará para ver el dashboard y presionar los botones "Emitir Credencial" o "Verificar".
-- Se comunicará únicamente con el `backend/`.
+### 4. `iot_hardware/` (NFC + MQTT)
+La capa física del torniquete.
+- Código C++ para un **ESP32**.
+- **Mosquitto MQTT**: El Broker de mensajería (puerto 1883) que conecta el ESP32 con el Backend del Verificador.
+- Módulo **NFC (NDEF)** para enviar Deep Links al teléfono móvil del usuario y detonar automáticamente su BC Wallet.
+
+### 5. `cliente/` (Portal Universitario Frontend)
+Portal web simulado en **React (Vite)** donde el estudiante se autentica e interactúa con el Emisor para obtener su credencial original (flujo de enrolamiento).
 
 ---
 
-## Orden de Ejecución (Cómo Levantar el Proyecto)
+## Orden de Ejecución
 
-Debido a las dependencias de red, los microservicios deben levantarse en un orden específico:
+Debido a las dependencias, la blockchain debe encenderse antes de levantar los demás microservicios.
 
-1. **Levantar la Blockchain (Nodos Indy)**
-   ```bash
-   cd infraestructura/von-network
-   ./manage build
-   ./manage start
-   ```
-   *Espera a que los nodos estén activos en `http://localhost:9000`.*
+### 1. Levantar la Blockchain (Indy)
+```bash
+cd infraestructura/scripts
+./start_indy_network.sh
+```
+*Si los contenedores de Indy son nuevos o fueron borrados, registra la semilla del Emisor:*
+```bash
+curl -d '{"role":"ENDORSER","alias":"Institucion","did":"JDmZmbYJnRyz5mb5U9wCxK","seed":"00000000000000000000000000000002","verkey":"APN393PJb55Jyi94DtgkQPd9zxghPbFSPqheppei5Esf"}' -H "Content-Type: application/json" -X POST http://localhost:9000/register
+```
 
-2. **Registrar la Institución en el Ledger**
-   Abre una terminal y registra el DID oficial de la institución:
-   ```bash
-   curl -d '{"role":"ENDORSER","alias":"Institucion","did":"JDmZmbYJnRyz5mb5U9wCxK","seed":"00000000000000000000000000000002","verkey":"APN393PJb55Jyi94DtgkQPd9zxghPbFSPqheppei5Esf"}' -H "Content-Type: application/json" -X POST http://localhost:9000/register
-   ```
+### 2. Levantar el Ecosistema Distribuido (Orquestación Maestra)
+En la raíz de la carpeta `codigo/`, corre el orquestador que levanta el Broker MQTT, el Emisor (Backend+Agente) y el Verificador (Backend+Agente):
+```bash
+docker compose up -d --build
+```
 
-3. **Levantar el Agente Criptográfico (ACA-Py)**
-   ```bash
-   cd identidad
-   docker compose -f docker-compose.acapy.yml up -d
-   ```
+### Puertos de Acceso
+- **Emisor Backend (Swagger):** `http://localhost:8082/docs`
+- **Emisor Agente ACA-Py:** `http://localhost:8001`
+- **Verificador Backend (Swagger):** `http://localhost:8083/docs`
+- **Verificador Agente ACA-Py:** `http://localhost:8011`
+- **Explorador Blockchain:** `http://localhost:9000`
+- **Frontend Alumnos (React):** `http://localhost:5173`
 
-4. **Levantar el Backend Institucional (FastAPI + DB)**
-   ```bash
-   cd backend
-   docker compose up --build -d
-   ```
-   *Accede a `http://localhost:8082/docs` para interactuar con el sistema.*
+Para apagar la orquestación usa `docker compose down`. Para detener la blockchain usa `./stop_indy_network.sh` en `infraestructura/scripts/`.
