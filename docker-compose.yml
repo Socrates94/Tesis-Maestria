@@ -61,7 +61,7 @@ services:
       --admin 0.0.0.0 8001
       --admin-insecure-mode
       --label "Institucion-Emisora"
-      --genesis-url http://host.docker.internal:9000/genesis
+      --genesis-url http://von-webserver-1:8000/genesis
       --wallet-type askar
       --wallet-name "institucion_wallet_2"
       --wallet-key "secret-key"
@@ -82,6 +82,7 @@ services:
       - fastapi-emisor
     networks:
       - ssi-network
+      - von_von
 
   # ==========================================
   # VERIFICADOR (Borde / Torniquete)
@@ -131,7 +132,7 @@ services:
       --admin 0.0.0.0 8001
       --admin-insecure-mode
       --label "Torniquete-Verificador"
-      --genesis-url http://host.docker.internal:9000/genesis
+      --genesis-url http://von-webserver-1:8000/genesis
       --wallet-type askar
       --wallet-name "verificador_wallet_1"
       --wallet-key "secret-key"
@@ -149,6 +150,7 @@ services:
       - fastapi-verificador
     networks:
       - ssi-network
+      - von_von
 
   react-frontend:
     build:
@@ -165,6 +167,8 @@ services:
 networks:
   ssi-network:
     driver: bridge
+  von_von:
+    external: true
 
 volumes:
   postgres_data:

@@ -348,12 +348,10 @@ function initEnv() {
 
   IP=""
   IPS=""
-  if [ ! -z $(echo ${1} | grep '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}') ]; then
-    if [[ $1 == *","* ]]; then
-      IPS="$1"
-    else
-      IP="$1"
-    fi
+  if [[ $1 == *","* ]]; then
+    IPS="$1"
+  elif [ ! -z "$1" ]; then
+    IP="$1"
   fi
   export IP="$IP" IPS="$IPS"
 
