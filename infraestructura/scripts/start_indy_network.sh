@@ -16,13 +16,20 @@ fi
 echo "Levantando la red local de Indy (von-network)..."
 cd "$VON_DIR"
 
+# Obtener IP local para la génesis de Indy (evita el fallback a 192.168.65.9)
+HOST_IP="${1:-$(hostname -I | awk '{print $1}')}"
+if [ -z "$HOST_IP" ]; then
+    HOST_IP="127.0.0.1"
+fi
+
 # Construir la imagen si es la primera vez
-echo "Construyendo las imágenes de Docker para von-network (esto puede tomar unos minutos la primera vez)..."
+echo "Construyendo las imágenes de Docker para von-network..."
 ./manage build
 
-# Levantar los nodos
-echo "Iniciando los nodos de Indy..."
-./manage start
+# Levantar los nodos pasándole la IP del host
+echo "Iniciando los nodos de Indy con la IP ($HOST_IP)..."
+./manage start "$HOST_IP"
 
 echo "La red local de Indy está corriendo."
 echo "Puedes acceder al explorador web (Ledger Browser) en: http://localhost:9000"
+
