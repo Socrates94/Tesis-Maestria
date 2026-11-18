@@ -27,10 +27,11 @@ fi
 echo "Construyendo las imágenes de Docker para von-network..."
 ./manage build
 
-# Levantar los nodos (utilizará el DNS interno de Docker automáticamente)
-echo "Iniciando los nodos de Indy con DNS interno..."
-./manage start "von-node1-1,von-node2-1,von-node3-1,von-node4-1,von-node5-1,von-node6-1,von-node7-1"
+# Levantar los nodos (utilizará el DNS interno de Docker automáticamente e integrará IndyScan)
+echo "Iniciando los nodos de Indy con DNS interno e integración con IndyScan..."
+./manage start "von-node1-1,von-node2-1,von-node3-1,von-node4-1,von-node5-1,von-node6-1,von-node7-1" "INDY_SCAN_URL=http://localhost:3707/home/LOCAL_NETWORK" "INDY_SCAN_TEXT=IndyScan Explorer"
 
 echo "La red local de Indy está corriendo."
-echo "Puedes acceder al explorador web (Ledger Browser) en: http://localhost:9000"
+echo "Puedes acceder al explorador web básico en: http://localhost:9000"
+echo "Para iniciar el explorador IndyScan avanzado, ejecuta: ./start_indyscan.sh"
 
