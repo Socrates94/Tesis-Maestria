@@ -26,9 +26,9 @@ codigo/backend/
 
 El backend actúa como un **Controller** del Agente Aries (ACA-Py). Sigue el patrón de diseño donde la lógica empresarial y los datos confidenciales nunca tocan la blockchain.
 
-*   **FastAPI:** Framework moderno y asíncrono para construir APIs web rápidas. Maneja de manera concurrente los Webhooks que llegan desde ACA-Py.
-*   **PostgreSQL:** Almacena la información de las conexiones DIDComm y el estado de las verificaciones.
-*   **SQLAlchemy (Async):** ORM con conexiones asíncronas para alto rendimiento.
+* **FastAPI:** Framework moderno y asíncrono para construir APIs web rápidas. Maneja de manera concurrente los Webhooks que llegan desde ACA-Py.
+* **PostgreSQL:** Almacena la información de las conexiones DIDComm y el estado de las verificaciones.
+* **SQLAlchemy (Async):** ORM con conexiones asíncronas para alto rendimiento.
 
 ## Flujo de Trabajo (Backend ↔ ACA-Py)
 
@@ -47,5 +47,35 @@ cd codigo/backend
 docker compose up -d --build
 ```
 
-- **API (FastAPI)**: Accesible en `http://localhost:8082`. 
+- **API (FastAPI)**: Accesible en `http://localhost:8082`.
 - **Swagger UI**: Accede a `http://localhost:8082/docs` para interactuar con todos los endpoints (Emitir, Verificar, Configurar).
+
+**Sí, exactamente.** Es lo más recomendable para asegurarte de que no quede ningún archivo o enlace residual de Python 3.13.
+
+Si actualmente tienes el entorno activo en tu terminal, los pasos completos son:
+
+1. **Desactiva el entorno actual:**
+
+   ```bash
+   deactivate
+   ```
+2. **Elimina la carpeta `.venv`:**
+
+   ```bash
+   rm -rf .venv
+   ```
+3. **Crea el nuevo entorno con Python 3.12:**
+
+   ```bash
+   uv venv --python 3.12 .venv
+   ```
+4. **Actívalo:**
+
+   ```bash
+   source .venv/bin/activate
+   ```
+5. **Instala las dependencias:**
+
+   ```bash
+   uv pip install -r requirements.txt
+   ```

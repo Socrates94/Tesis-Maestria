@@ -1,0 +1,15 @@
+[
+  {
+    "id": "LOCAL_NETWORK",
+    "display": "Red Local Indy (BUAP Tesis)",
+    "ui": {
+      "priority": 1,
+      "display": "Red Local Indy (BUAP)",
+      "description": "Red Hyperledger Indy para Tesis de Control de Acceso SSI"
+    },
+    "es": {
+      "index": "txs-localnetwork"
+    },
+    "description": "Red descentralizada local Hyperledger Indy con von-network."
+  }
+]

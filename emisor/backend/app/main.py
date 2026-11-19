@@ -6,6 +6,7 @@ from app.core.database import engine, Base
 # Importar modelos para que Base.metadata.create_all los reconozca
 from app.models.connection import ConnectionRecord
 from app.models.verification import VerificationRecord
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Inicializar la base de datos al arrancar
