@@ -27,9 +27,14 @@ fi
 echo "Construyendo las imágenes de Docker para von-network..."
 ./manage build
 
-# Levantar los nodos (utilizará el DNS interno de Docker automáticamente e integrará IndyScan)
-echo "Iniciando los nodos de Indy con DNS interno e integración con IndyScan..."
-./manage start "von-node1-1,von-node2-1,von-node3-1,von-node4-1,von-node5-1,von-node6-1,von-node7-1" "INDY_SCAN_URL=http://localhost:3707/home/LOCAL_NETWORK" "INDY_SCAN_TEXT=IndyScan Explorer"
+# Levantar los nodos (soporta IP de red para delegación distribuida o nombres DNS internos para modo local)
+if [ -n "$1" ]; then
+    echo "Iniciando nodos de Indy configurados para acceso LAN en IP: $1..."
+    ./manage start "$1" "INDY_SCAN_URL=http://$1:3707/home/LOCAL_NETWORK" "INDY_SCAN_TEXT=IndyScan Explorer"
+else
+    echo "Iniciando los nodos de Indy con DNS interno (modo local en una sola máquina)..."
+    ./manage start "von-node1-1,von-node2-1,von-node3-1,von-node4-1,von-node5-1,von-node6-1,von-node7-1" "INDY_SCAN_URL=http://localhost:3707/home/LOCAL_NETWORK" "INDY_SCAN_TEXT=IndyScan Explorer"
+fi
 
 echo "La red local de Indy está corriendo."
 echo "Puedes acceder al explorador web básico en: http://localhost:9000"
